@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POW FINDER - Fresh Alpine Powder Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@400;600;700&display=swap');
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .title-font { font-family: 'Righteous', cursive; }
+        .snow-animation {
+            animation: snowfall 3s ease-in-out infinite;
+        }
+        @keyframes snowfall {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Icons
+        const Mountain = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>);
+        const Snowflake = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="m12 2 3 3m-3-3-3 3"/><path d="m12 22 3-3m-3 3-3-3"/><line x1="2" x2="22" y1="12" y2="12"/><path d="m2 12 3 3m-3-3 3-3"/><path d="m22 12-3 3m3-3-3-3"/><line x1="4.93" x2="19.07" y1="4.93" y2="19.07"/><path d="m4.93 4.93 2.83 2.83m-2.83-2.83 2.83-2.83"/><path d="m19.07 19.07-2.83-2.83m2.83 2.83-2.83 2.83"/><line x1="4.93" x2="19.07" y1="19.07" y2="4.93"/><path d="m4.93 19.07 2.83-2.83m-2.83 2.83-2.83 2.83"/><path d="m19.07 4.93-2.83 2.83m2.83-2.83 2.83-2.83"/></svg>);
+        const Thermometer = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>);
+        const MapPin = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>);
+        const Trophy = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>);
+        const RefreshCw = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>);
+        const AlertCircle = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>);
+        const Layers = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>);
+        const Calendar = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>);
+
+        function PowFinder() {
+            const [resorts, setResorts] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [bestResort, setBestResort] = useState(null);
+            const [error, setError] = useState(null);
+            const [lastFetch, setLastFetch] = useState(null);
+            const [userLocation, setUserLocation] = useState(null);
+            const [locationSet, setLocationSet] = useState(false);
+            const [gettingLocation, setGettingLocation] = useState(false);
+
+            const UNSPLASH_ACCESS_KEY = 'ZDVtQ8eNrNeNu_Pc_CAzqzQPdaVfAwTNrs9avy1hBr4';
+            
+            const BASE_LOCATIONS = [
+                { name: "Sainte Foy Tarentaise", lat: 45.42, lng: 6.95 },
+                { name: "Val d'Isère", lat: 45.4489, lng: 6.9792 },
+                { name: "Courchevel", lat: 45.4147, lng: 6.6347 },
+                { name: "Chamonix", lat: 45.9237, lng: 6.8694 },
+                { name: "Tignes", lat: 45.4667, lng: 6.9000 },
+                { name: "Les Arcs", lat: 45.5710, lng: 6.8008 },
+                { name: "La Plagne", lat: 45.5131, lng: 6.6778 }
+            ];
+
+            const SKI_RESORTS = [
+                { name: "Val d'Isère", region: "Tarentaise", lat: 45.4489, lng: 6.9792, elevation: 1850, imageSearch: "Val d'Isere ski powder snow" },
+                { name: "Tignes", region: "Tarentaise", lat: 45.4667, lng: 6.9000, elevation: 2100, imageSearch: "Tignes ski resort powder" },
+                { name: "Les Arcs", region: "Tarentaise", lat: 45.5710, lng: 6.8008, elevation: 1600, imageSearch: "Les Arcs ski France powder" },
+                { name: "La Plagne", region: "Tarentaise", lat: 45.5131, lng: 6.6778, elevation: 1970, imageSearch: "La Plagne ski resort snow" },
+                { name: "Courchevel", region: "Tarentaise", lat: 45.4147, lng: 6.6347, elevation: 1850, imageSearch: "Courchevel ski powder snow" },
+                { name: "Méribel", region: "Tarentaise", lat: 45.4006, lng: 6.5664, elevation: 1450, imageSearch: "Meribel ski resort Alps" },
+                { name: "Val Thorens", region: "Tarentaise", lat: 45.2978, lng: 6.5803, elevation: 2300, imageSearch: "Val Thorens highest ski resort Europe" },
+                { name: "Chamonix", region: "Mont Blanc", lat: 45.9237, lng: 6.8694, elevation: 1035, imageSearch: "Chamonix Mont Blanc ski powder" },
+                { name: "Megève", region: "Mont Blanc", lat: 45.8564, lng: 6.6169, elevation: 1113, imageSearch: "Megeve ski resort France" },
+                { name: "Les Contamines", region: "Mont Blanc", lat: 45.8214, lng: 6.7303, elevation: 1164, imageSearch: "Les Contamines Montjoie ski" },
+                { name: "Serre Chevalier", region: "Hautes-Alpes", lat: 44.9414, lng: 6.5508, elevation: 1200, imageSearch: "Serre Chevalier ski powder" },
+                { name: "Alpe d'Huez", region: "Isère", lat: 45.0914, lng: 6.0711, elevation: 1860, imageSearch: "Alpe d'Huez ski resort snow" },
+                { name: "Les Deux Alpes", region: "Isère", lat: 45.0111, lng: 6.1244, elevation: 1650, imageSearch: "Les Deux Alpes glacier ski" },
+                { name: "La Grave", region: "Hautes-Alpes", lat: 45.0442, lng: 6.3067, elevation: 1450, imageSearch: "La Grave freeride powder snow" },
+                { name: "Sainte Foy Tarentaise", region: "Tarentaise", lat: 45.4200, lng: 6.9500, elevation: 1550, imageSearch: "Sainte Foy Tarentaise ski powder" },
+                { name: "Les Menuires", region: "Tarentaise", lat: 45.3269, lng: 6.5331, elevation: 1850, imageSearch: "Les Menuires ski resort" },
+                { name: "Avoriaz", region: "Portes du Soleil", lat: 46.1922, lng: 6.7714, elevation: 1800, imageSearch: "Avoriaz ski resort snow" },
+                { name: "Morzine", region: "Portes du Soleil", lat: 46.1794, lng: 6.7086, elevation: 1000, imageSearch: "Morzine Portes du Soleil ski" },
+                { name: "Flaine", region: "Haute-Savoie", lat: 46.0036, lng: 6.6953, elevation: 1600, imageSearch: "Flaine ski resort Grand Massif" },
+                { name: "La Clusaz", region: "Haute-Savoie", lat: 45.9044, lng: 6.4236, elevation: 1100, imageSearch: "La Clusaz ski village powder" }
+            ];
+
+            const calculateDistance = (lat1, lon1, lat2, lon2) => {
+                const R = 6371;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            };
+
+            const calculatePowScore = (snowfall24h, snowfall7d, daysSinceSnow, temperature, distance) => {
+                let score = 0;
+                
+                // Fresh snow in last 24h (most important!)
+                if (snowfall24h >= 30) score += 40;
+                else if (snowfall24h >= 20) score += 30;
+                else if (snowfall24h >= 10) score += 20;
+                else if (snowfall24h >= 5) score += 10;
+                
+                // Snow in last 7 days
+                if (snowfall7d >= 50) score += 20;
+                else if (snowfall7d >= 30) score += 15;
+                else if (snowfall7d >= 15) score += 10;
+                
+                // Days since last snow (fresher is better)
+                if (daysSinceSnow === 0) score += 15;
+                else if (daysSinceSnow === 1) score += 10;
+                else if (daysSinceSnow === 2) score += 5;
+                else if (daysSinceSnow > 5) score -= 10;
+                
+                // Temperature (colder = better powder quality)
+                if (temperature <= -10) score += 10;
+                else if (temperature <= -5) score += 5;
+                else if (temperature > 0) score -= 5;
+                
+                // Distance bonus (closer is better)
+                if (distance <= 20) score += 10;
+                else if (distance <= 50) score += 5;
+                else if (distance > 100) score -= 5;
+                
+                return Math.max(0, Math.min(100, score));
+            };
+
+            const useGPSLocation = () => {
+                setGettingLocation(true);
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude, name: "Your Location" });
+                            setLocationSet(true);
+                            setGettingLocation(false);
+                        },
+                        (error) => {
+                            setError("Could not get your location.");
+                            setGettingLocation(false);
+                        }
+                    );
+                } else {
+                    setError("GPS not supported.");
+                    setGettingLocation(false);
+                }
+            };
+
+            const selectBaseLocation = (location) => {
+                setUserLocation(location);
+                setLocationSet(true);
+            };
+
+            const fetchResortImage = async (resort) => {
+                try {
+                    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(resort.imageSearch)}&client_id=${UNSPLASH_ACCESS_KEY}&per_page=1&orientation=landscape`;
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.results?.length > 0) {
+                            return { url: data.results[0].urls.regular, thumb: data.results[0].urls.small, photographer: data.results[0].user.name, photographerUrl: data.results[0].user.links.html };
+                        }
+                    }
+                } catch (error) {}
+                return { url: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?w=1200&q=80', thumb: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?w=400&q=80', photographer: 'Maarten Duineveld', photographerUrl: 'https://unsplash.com/@maartenduineveld' };
+            };
+
+            const fetchResortData = async (resort) => {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${resort.lat}&longitude=${resort.lng}&daily=snowfall_sum,temperature_2m_max,temperature_2m_min&current=temperature_2m,snowfall&past_days=7&timezone=Europe/Paris`;
+                
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('API error');
+                    const data = await response.json();
+                    
+                    const current = data.current;
+                    const daily = data.daily;
+                    
+                    // Calculate snowfall metrics
+                    const snowfall24h = daily.snowfall_sum[7] || 0; // Today's snowfall
+                    const snowfall7d = daily.snowfall_sum.slice(1).reduce((a, b) => a + b, 0);
+                    
+                    // Find days since last snow
+                    let daysSinceSnow = 7;
+                    for (let i = 7; i >= 0; i--) {
+                        if (daily.snowfall_sum[i] > 0) {
+                            daysSinceSnow = 7 - i;
+                            break;
+                        }
+                    }
+                    
+                    const temperature = current.temperature_2m;
+                    const tempMax = daily.temperature_2m_max[7];
+                    const tempMin = daily.temperature_2m_min[7];
+                    
+                    return {
+                        ...resort,
+                        snowfall24h: snowfall24h.toFixed(1),
+                        snowfall7d: snowfall7d.toFixed(1),
+                        daysSinceSnow,
+                        temperature: Math.round(temperature),
+                        tempMax: Math.round(tempMax),
+                        tempMin: Math.round(tempMin)
+                    };
+                } catch (err) {
+                    throw err;
+                }
+            };
+
+            const fetchSnowData = async () => {
+                if (!userLocation) return;
+                setLoading(true);
+                setError(null);
+                
+                try {
+                    const resortDataPromises = SKI_RESORTS.map(async (resort) => {
+                        const [conditions, image] = await Promise.all([fetchResortData(resort), fetchResortImage(resort)]);
+                        const distance = calculateDistance(userLocation.lat, userLocation.lng, resort.lat, resort.lng);
+                        const powScore = calculatePowScore(
+                            parseFloat(conditions.snowfall24h),
+                            parseFloat(conditions.snowfall7d),
+                            conditions.daysSinceSnow,
+                            conditions.temperature,
+                            distance
+                        );
+                        return { ...conditions, image, distance, powScore };
+                    });
+                    
+                    const allResorts = await Promise.all(resortDataPromises);
+                    const top10 = allResorts.sort((a, b) => b.powScore - a.powScore).slice(0, 10);
+                    const best = top10[0];
+                    
+                    setResorts(top10);
+                    setBestResort(best);
+                    setLastFetch(new Date());
+                } catch (err) {
+                    setError('Failed to fetch snow data. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                if (locationSet && userLocation) fetchSnowData();
+            }, [locationSet]);
+
+            const getScoreColor = (score) => {
+                if (score >= 70) return 'text-green-500';
+                if (score >= 50) return 'text-blue-500';
+                if (score >= 30) return 'text-yellow-500';
+                return 'text-gray-500';
+            };
+
+            const getScoreLabel = (score) => {
+                if (score >= 70) return 'Epic Pow!';
+                if (score >= 50) return 'Good Snow';
+                if (score >= 30) return 'Decent';
+                return 'Tracked Out';
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50 p-8">
+                    <div className="max-w-7xl mx-auto">
+                        {!locationSet ? (
+                            <div className="min-h-[80vh] flex items-center justify-center">
+                                <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl border border-blue-200">
+                                    <div className="text-center mb-6">
+                                        <div className="w-16 h-16 mx-auto mb-4 text-blue-600 snow-animation"><Snowflake /></div>
+                                        <h1 className="text-4xl font-bold text-gray-800 mb-2 title-font">POW FINDER</h1>
+                                        <p className="text-gray-600 font-semibold">Where's your base location?</p>
+                                    </div>
+                                    <button onClick={useGPSLocation} disabled={gettingLocation} className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-4 rounded-lg flex items-center justify-center gap-2 mb-4 transition-all font-semibold text-lg shadow-lg">
+                                        <MapPin className="w-6 h-6" />
+                                        {gettingLocation ? 'Getting location...' : 'Use My Location (GPS)'}
+                                    </button>
+                                    <div className="relative mb-4">
+                                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300"></div></div>
+                                        <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">or choose a resort</span></div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {BASE_LOCATIONS.map((loc, idx) => (
+                                            <button key={idx} onClick={() => selectBaseLocation(loc)} className="w-full bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-blue-700 px-6 py-3 rounded-lg transition-all text-left flex items-center gap-2 border border-gray-200 hover:border-blue-300 font-semibold">
+                                                <Mountain className="w-4 h-4" /> {loc.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="text-center mb-12">
+                                    <div className="flex items-center justify-center gap-3 mb-4">
+                                        <div className="w-12 h-12 text-blue-600 snow-animation"><Snowflake /></div>
+                                        <h1 className="text-6xl font-bold text-gray-800 title-font">POW FINDER</h1>
+                                    </div>
+                                    <p className="text-2xl text-gray-700 font-semibold">Fresh Powder Tracker</p>
+                                    <p className="text-blue-600 mt-2 font-semibold">📍 Based from: {userLocation.name}</p>
+                                    <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
+                                        {lastFetch && <div className="text-gray-600 text-sm">Last updated: {lastFetch.toLocaleTimeString()}</div>}
+                                        <button onClick={() => fetchSnowData()} disabled={loading} className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all shadow-md font-semibold">
+                                            <RefreshCw className={loading ? 'animate-spin' : ''} /> Refresh Data
+                                        </button>
+                                        <button onClick={() => { setLocationSet(false); setUserLocation(null); setResorts([]); setBestResort(null); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all border border-gray-300 font-semibold">
+                                            <MapPin className="w-5 h-5" /> Change Location
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {error && (
+                                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-8 flex items-start gap-3">
+                                        <div className="w-6 h-6 text-red-500 flex-shrink-0 mt-1"><AlertCircle /></div>
+                                        <div className="text-gray-800"><p className="font-bold mb-1">Error</p><p>{error}</p></div>
+                                    </div>
+                                )}
+                                
+                                {loading ? (
+                                    <div className="text-center text-gray-700 text-2xl">
+                                        <div className="w-16 h-16 mx-auto mb-4 animate-bounce text-blue-600 snow-animation"><Snowflake /></div>
+                                        Searching for fresh powder...
+                                    </div>
+                                ) : resorts.length > 0 ? (
+                                    <div>
+                                        {bestResort && (
+                                            <div className="relative bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl overflow-hidden mb-8 shadow-2xl border-2 border-cyan-400">
+                                                {bestResort.image && (
+                                                    <>
+                                                        <div className="absolute inset-0">
+                                                            <img src={bestResort.image.url} alt={bestResort.name} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/85 via-cyan-900/75 to-blue-900/85"></div>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                <div className="relative z-10 p-8">
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <div className="w-12 h-12 text-yellow-300"><Trophy /></div>
+                                                        <h2 className="text-4xl font-bold text-white drop-shadow-lg title-font">Best Powder Spot Right Now!</h2>
+                                                    </div>
+                                                    <div className="grid md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <h3 className="text-5xl font-bold text-white mb-2 drop-shadow-lg title-font">{bestResort.name}</h3>
+                                                            <p className="text-2xl text-white/95 mb-4 flex items-center gap-2 drop-shadow font-semibold">
+                                                                <Mountain className="w-6 h-6" />
+                                                                {bestResort.region} • {bestResort.elevation}m
+                                                            </p>
+                                                            <div className="mb-4">
+                                                                <div className={`text-7xl font-bold drop-shadow-lg ${getScoreColor(bestResort.powScore)}`}>{Math.round(bestResort.powScore)}</div>
+                                                                <div className="text-2xl text-cyan-200 font-bold">{getScoreLabel(bestResort.powScore)}</div>
+                                                            </div>
+                                                            <p className="text-white/90 text-xl font-semibold">📍 {bestResort.distance.toFixed(0)} km away</p>
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/40">
+                                                                <div className="flex items-center gap-3 mb-2">
+                                                                    <Snowflake className="w-6 h-6 text-white" />
+                                                                    <span className="text-white font-bold text-lg">Fresh Snow (24h)</span>
+                                                                </div>
+                                                                <p className="text-4xl font-bold text-white">{bestResort.snowfall24h} cm</p>
+                                                            </div>
+                                                            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/40">
+                                                                <div className="flex items-center gap-3 mb-2">
+                                                                    <Layers className="w-6 h-6 text-white" />
+                                                                    <span className="text-white font-bold text-lg">Snow (7 days)</span>
+                                                                </div>
+                                                                <p className="text-4xl font-bold text-white">{bestResort.snowfall7d} cm</p>
+                                                            </div>
+                                                            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/40">
+                                                                <div className="flex items-center gap-3 mb-2">
+                                                                    <Calendar className="w-6 h-6 text-white" />
+                                                                    <span className="text-white font-bold text-lg">Days Since Snow</span>
+                                                                </div>
+                                                                <p className="text-4xl font-bold text-white">{bestResort.daysSinceSnow} {bestResort.daysSinceSnow === 1 ? 'day' : 'days'}</p>
+                                                            </div>
+                                                            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/40">
+                                                                <div className="flex items-center gap-3 mb-2">
+                                                                    <Thermometer className="w-6 h-6 text-white" />
+                                                                    <span className="text-white font-bold text-lg">Temperature</span>
+                                                                </div>
+                                                                <p className="text-4xl font-bold text-white">{bestResort.temperature}°C</p>
+                                                                <p className="text-sm text-white/80 font-semibold">High: {bestResort.tempMax}°C • Low: {bestResort.tempMin}°C</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="mb-6">
+                                            <h2 className="text-4xl font-bold text-gray-800 mb-6 title-font">Other Pow Spots</h2>
+                                        </div>
+                                        
+                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {resorts.filter(resort => resort.name !== bestResort?.name).map((resort, idx) => (
+                                                <div key={idx} className="relative bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all border border-gray-200 hover:border-blue-300">
+                                                    {resort.image && (
+                                                        <div className="relative h-48">
+                                                            <img src={resort.image.thumb} alt={resort.name} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent"></div>
+                                                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
+                                                                <div className={`text-3xl font-bold ${getScoreColor(resort.powScore)}`}>{Math.round(resort.powScore)}</div>
+                                                                <div className="text-xs text-gray-600 font-bold">{getScoreLabel(resort.powScore)}</div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <div className="p-5">
+                                                        <h3 className="text-2xl font-bold text-gray-800 mb-1 title-font">{resort.name}</h3>
+                                                        <p className="text-sm text-gray-600 mb-3 flex items-center gap-1 font-semibold">
+                                                            <Mountain className="w-4 h-4" />
+                                                            {resort.region} • {resort.elevation}m • {resort.distance.toFixed(0)} km
+                                                        </p>
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center justify-between text-sm">
+                                                                <div className="flex items-center gap-2 text-gray-700">
+                                                                    <Snowflake className="w-4 h-4" />
+                                                                    <span className="font-medium">24h Snow</span>
+                                                                </div>
+                                                                <span className="font-bold text-gray-900">{resort.snowfall24h} cm</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-sm">
+                                                                <div className="flex items-center gap-2 text-gray-700">
+                                                                    <Layers className="w-4 h-4" />
+                                                                    <span className="font-medium">7d Total</span>
+                                                                </div>
+                                                                <span className="font-bold text-gray-900">{resort.snowfall7d} cm</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-sm">
+                                                                <div className="flex items-center gap-2 text-gray-700">
+                                                                    <Calendar className="w-4 h-4" />
+                                                                    <span className="font-medium">Last Snow</span>
+                                                                </div>
+                                                                <span className="font-bold text-gray-900">{resort.daysSinceSnow}d ago</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-sm">
+                                                                <div className="flex items-center gap-2 text-gray-700">
+                                                                    <Thermometer className="w-4 h-4" />
+                                                                    <span className="font-medium">Temp</span>
+                                                                </div>
+                                                                <span className="font-bold text-gray-900">{resort.temperature}°C</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<PowFinder />, document.getElementById('root'));
+    </script>
+</body>
+</html>
